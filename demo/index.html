@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Circles</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<style>
+			body {
+				width: 100vw;
+				height: 100vh;
+				padding: 0;
+				margin: 0;
+				position: absolute;
+				overflow: hidden;
+			}
+
+			#playground {
+				width: 100%;
+				height: 100%;
+				/* width: 90vw;
+				height: 80vh;
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				margin: auto;
+				border-radius: 3px;
+				border: 1px solid #00000014;
+				overflow: hidden; */
+			}
+
+			#buttons {
+				position: absolute;
+				bottom: 1rem;
+				right: 1rem;
+				display: flex;
+				flex-direction: row;
+				gap: 1rem;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="playground"></div>
+		<div id="buttons">
+			<button id="play">Запустить</button>
+			<button id="stop">Остановить</button>
+			<button id="destroy">Удалить</button>
+		</div>
+		<script src="./index.ts"></script>
+	</body>
+</html>

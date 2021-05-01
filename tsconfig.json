@@ -1,0 +1,13 @@
+{
+	"compilerOptions": {
+		"target": "ES5",
+		"strict": true,
+		"outDir": "./build/",
+		"lib": ["ES2016", "DOM"],
+		"esModuleInterop": true,
+		"moduleResolution": "Node",
+		"allowJs": true,
+		"removeComments": true
+	},
+	"include": ["src/**/*", "demo/**/*"]
+}
