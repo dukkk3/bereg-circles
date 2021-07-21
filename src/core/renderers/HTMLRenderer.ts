@@ -36,9 +36,11 @@ export class HTMLRenderer extends Renderer {
 					: Matter.Vector.create(1, 1);
 			const size = this.options.resizeType === "rect" ? shape.currentSize : shape.size;
 
-			shape.element.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${
-				shape.body.angle * this.options.angleFactor
-			}rad) scale(${scale.x}, ${scale.y})`;
+			shape.element.style.transform = `translate3d(${position.x}px, ${
+				position.y
+			}px, 0px) rotate(${shape.body.angle * this.options.angleFactor}rad) scale(${
+				scale.x
+			}, ${scale.y})`;
 			shape.element.style.width = `${size.width}px`;
 			shape.element.style.height = `${size.height}px`;
 

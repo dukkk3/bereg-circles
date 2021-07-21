@@ -1,5 +1,10 @@
 import type { IBodyDefinition, IEngineDefinition, IRunnerOptions } from "matter-js";
 
+export enum UserActionButtonType {
+	Mouse,
+	Touch,
+}
+
 // Состояния сфер
 export type ShapeStateKind = "active" | "initial" | "primary";
 
@@ -50,6 +55,7 @@ export interface ISpaceOptions {
 		showTime: number; // Общее время на появление всех сфер
 	};
 	onSelect?: (payload: { key: string; state: ShapeStateKind }) => void; // Функция, вызываемая каждый раз, как у какой-либо сферы меняется состояние
+	onDestroy?: () => void;
 }
 
 export type DeepPartial<T> = {

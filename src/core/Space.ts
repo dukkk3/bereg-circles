@@ -11,7 +11,7 @@ import { createBasicStyles } from "./presets";
 import { getCursorPosition } from "../utils";
 import { HTMLShape } from "./shapes";
 import { ScaleView } from "./views";
-import type { ISpaceOptions, DeepPartial } from "./types";
+import { ISpaceOptions, DeepPartial, UserActionButtonType } from "./types";
 
 export class Space {
 	protected engine: Matter.Engine;
@@ -147,46 +147,56 @@ export class Space {
 		);
 	}
 
-	protected onMouseDown(event: MouseEvent | TouchEvent) {
-		if (this.runner.enabled) {
-			this.mousePosition = getCursorPosition(event);
-			this.isMouseDown = true;
-		}
+	protected createUserActionButtonDownHandler(type: UserActionButtonType) {
+		return (event: MouseEvent | TouchEvent) => {
+			if (this.runner.enabled) {
+				event.preventDefault();
+
+				this.mousePosition = getCursorPosition(type, event);
+				this.isMouseDown = true;
+			}
+		};
 	}
 
-	protected onMouseMove(event: MouseEvent | TouchEvent) {
-		if (this.isMouseDown && this.runner.enabled) {
-			const position = getCursorPosition(event);
-			const difference = Matter.Vector.sub(position, this.mousePosition);
-			const distance = Matter.Vector.magnitude(difference);
+	protected createUserActionButtonMoveHandler(type: UserActionButtonType) {
+		return (event: MouseEvent | TouchEvent) => {
+			if (this.isMouseDown && this.runner.enabled) {
+				event.preventDefault();
 
-			this.attractor.centerPosition.x += difference.x * 0.65;
+				const position = getCursorPosition(type, event);
+				const difference = Matter.Vector.sub(position, this.mousePosition);
+				const distance = Matter.Vector.magnitude(difference);
 
-			if (this.attractor.centerPosition.x > this.spaceSize.width) {
-				this.attractor.centerPosition.x = this.spaceSize.width;
-			} else if (this.attractor.centerPosition.x < 0) {
-				this.attractor.centerPosition.x = 0;
+				this.attractor.centerPosition.x += difference.x * 0.65;
+
+				if (this.attractor.centerPosition.x > this.spaceSize.width) {
+					this.attractor.centerPosition.x = this.spaceSize.width;
+				} else if (this.attractor.centerPosition.x < 0) {
+					this.attractor.centerPosition.x = 0;
+				}
+
+				if (distance === 0) {
+					return;
+				}
+
+				difference.x = difference.x / distance;
+				difference.y = difference.y / distance;
+
+				const direction = Matter.Vector.create(difference.x * 0.003, difference.y * 0.002);
+
+				this.shapes.forEach((shape) => {
+					Attractor.applyForce(shape, direction);
+				});
+
+				this.mousePosition = position;
 			}
-
-			if (distance === 0) {
-				return;
-			}
-
-			difference.x = difference.x / distance;
-			difference.y = difference.y / distance;
-
-			const direction = Matter.Vector.create(difference.x * 0.003, difference.y * 0.002);
-
-			this.shapes.forEach((shape) => {
-				Attractor.applyForce(shape, direction);
-			});
-
-			this.mousePosition = position;
-		}
+		};
 	}
 
-	protected onMouseUp() {
-		this.isMouseDown = false;
+	protected createUserActionButtonUpHandler() {
+		return () => {
+			this.isMouseDown = false;
+		};
 	}
 
 	protected completeDestroy() {
@@ -213,6 +223,10 @@ export class Space {
 				if (complete) {
 					this.completeDestroy();
 				}
+
+				if (this.options.onDestroy) {
+					this.options.onDestroy();
+				}
 			});
 		}
 	}
@@ -233,12 +247,28 @@ export class Space {
 
 		const shapes = factory.createShapes();
 
-		this.container.addEventListener("mousedown", this.onMouseDown.bind(this));
-		this.container.addEventListener("mousemove", this.onMouseMove.bind(this));
-		this.container.addEventListener("mouseup", this.onMouseUp.bind(this));
-		this.container.addEventListener("touchstart", this.onMouseDown.bind(this));
-		this.container.addEventListener("touchmove", this.onMouseMove.bind(this));
-		this.container.addEventListener("touchend", this.onMouseUp.bind(this));
+		const userActionButtonDownMouseHandler = this.createUserActionButtonDownHandler(
+			UserActionButtonType.Mouse
+		);
+		const userActionButtonDownTouchHandler = this.createUserActionButtonDownHandler(
+			UserActionButtonType.Touch
+		);
+
+		const userActionButtonMoveMouseHandler = this.createUserActionButtonMoveHandler(
+			UserActionButtonType.Mouse
+		);
+		const userActionButtonMoveTouchHandler = this.createUserActionButtonMoveHandler(
+			UserActionButtonType.Touch
+		);
+
+		const userActionButtonUpHandler = this.createUserActionButtonUpHandler();
+
+		this.container.addEventListener("mousedown", userActionButtonDownMouseHandler);
+		this.container.addEventListener("mousemove", userActionButtonMoveMouseHandler);
+		this.container.addEventListener("mouseup", userActionButtonUpHandler);
+		this.container.addEventListener("touchstart", userActionButtonDownTouchHandler);
+		this.container.addEventListener("touchmove", userActionButtonMoveTouchHandler);
+		this.container.addEventListener("touchend", userActionButtonUpHandler);
 
 		const stateNameSelectors = shapeStateNameKind.map(
 			(stateName) => this.options.common.selector.className.state[stateName]
@@ -255,10 +285,10 @@ export class Space {
 				}
 
 				const oldState = shape.state;
+				shape.element.classList.remove(...stateNameSelectors);
 
 				switch (shape.state) {
 					case "initial":
-						shape.element.classList.remove(...stateNameSelectors);
 						shape.element.classList.add(this.options.common.selector.className.state.active);
 
 						shape.setState("active");
@@ -270,7 +300,6 @@ export class Space {
 
 						break;
 					case "active":
-						shape.element.classList.remove(...stateNameSelectors);
 						shape.element.classList.add(this.options.common.selector.className.state.primary);
 
 						shape.setState("primary");
@@ -281,6 +310,15 @@ export class Space {
 						);
 
 						break;
+					case "primary":
+						shape.element.classList.add(this.options.common.selector.className.state.initial);
+
+						shape.setState("initial");
+						shape.setMass(this.options.common.mass.initial);
+						shape.linearResize(
+							this.options.common.size.initial * 2,
+							this.options.common.size.initial * 2
+						);
 				}
 
 				if (shape.state !== oldState && this.options.onSelect) {
