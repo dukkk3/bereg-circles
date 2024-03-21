@@ -1,5 +1,7 @@
 # Tags Cloud
 
+[demo](https://stackblitz.com/~/github.com/dukkk3/bereg-circles)
+
 ## Описание
 Этот репозиторий содержит реализацию функциональности выбора тегов, аналогичной функциональности, представленной в приложении Apple Music. Пример интерфейса можно посмотреть по [ссылке](https://i.pinimg.com/originals/77/73/fd/7773fdfff134312d1fc43328bc717839.png).
 
